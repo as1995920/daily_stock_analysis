@@ -9,7 +9,6 @@ description = "Personal US market daily intelligence system"
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
+testpaths = ["qa"]
+python_files = ["check_*.py"]
 addopts = "-q"
-
