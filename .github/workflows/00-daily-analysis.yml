@@ -1,9 +1,8 @@
 name: 每日股票分析
 
 on:
-  # 定时触发 - 每天北京时间 18:00 (UTC 10:00)
-  schedule:
-    - cron: '0 10 * * 1-5'     # 周一到周五，UTC 10:00 = 北京时间 18:00
+  # 继承的多市场定时任务仅保留手动触发，避免与 US Market Daily Intelligence V1 重复推送。
+  # 原任务仍可通过 workflow_dispatch 手动运行。
   
   # 手动触发
   workflow_dispatch:
