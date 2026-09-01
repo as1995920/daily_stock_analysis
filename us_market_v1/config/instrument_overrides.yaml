@@ -1,0 +1,8 @@
+# Explicit metadata only. A proxy supplies benchmark context; it never replaces
+# the instrument's direct quote or pretends to be the instrument's own history.
+IQQ:
+  display_name: iShares Nasdaq 100 ETF
+  history_proxy: ^NDX
+  history_proxy_reason: direct history is insufficient for MA200; use Nasdaq-100 benchmark context only
+  source_url: https://www.ishares.com/us/products/351653/ishares-nasdaq-100-etf
+

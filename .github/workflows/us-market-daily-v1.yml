@@ -1,0 +1,91 @@
+name: US Market Daily Intelligence V1
+
+on:
+  schedule:
+    # 06:30 Asia/Tokyo = 21:30 UTC on the previous calendar day.
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Generate and validate without sending to Feishu"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: us-market-daily-v1
+  cancel-in-progress: false
+
+jobs:
+  daily-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+      FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: us_market_v1/requirements.txt
+
+      - name: Install V1 dependencies
+        working-directory: us_market_v1
+        run: python -m pip install -r requirements.txt
+
+      - name: Restore duplicate-send state
+        uses: actions/cache/restore@v4
+        with:
+          path: us_market_v1/data/state
+          key: us-market-v1-notification-state-${{ github.run_id }}
+          restore-keys: us-market-v1-notification-state-
+
+      - name: Validate Feishu secret configuration
+        if: github.event_name != 'workflow_dispatch' || inputs.dry_run != true
+        shell: bash
+        run: |
+          if [[ -z "${FEISHU_WEBHOOK_URL}" ]]; then
+            echo "FEISHU_WEBHOOK_URL is not configured in GitHub Secrets."
+            exit 1
+          fi
+          if [[ -z "${FEISHU_SECRET}" ]]; then
+            echo "FEISHU_SECRET is not configured in GitHub Secrets."
+            exit 1
+          fi
+
+      - name: Run V1 in dry-run mode
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
+        working-directory: us_market_v1
+        run: python -m src.main --phase f --dry-run
+
+      - name: Run V1 and send Feishu summary
+        if: github.event_name != 'workflow_dispatch' || inputs.dry_run != true
+        working-directory: us_market_v1
+        run: python -m src.main --phase f
+
+      - name: Upload V1 reports and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: us-market-v1-${{ github.run_number }}
+          path: |
+            us_market_v1/reports/
+            us_market_v1/samples/
+            us_market_v1/logs/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Save duplicate-send state after successful send
+        if: success() && (github.event_name != 'workflow_dispatch' || inputs.dry_run != true)
+        uses: actions/cache/save@v4
+        with:
+          path: us_market_v1/data/state
+          key: us-market-v1-notification-state-${{ github.run_id }}
