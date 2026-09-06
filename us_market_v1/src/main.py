@@ -90,6 +90,14 @@ def main(argv: list[str] | None = None) -> int:
         "START phase=%s dry_run=%s market_date=%s tickers=%s",
         args.phase.upper(), args.dry_run, selected_date, ",".join(config.all_tickers),
     )
+    if (
+        args.phase == "f"
+        and not args.dry_run
+        and not args.audit
+        and not DuplicateGuard(args.state_output).should_generate(selected_date)
+    ):
+        logger.info("NOTIFICATION_SKIPPED market_date=%s reason=duplicate_guard", selected_date)
+        return 0
     if args.audit:
         audit = run_reliability_audit(
             lambda: YFinanceMarketDataProvider(), config, selected_date, args.audit_repeats
@@ -149,9 +157,6 @@ def main(argv: list[str] | None = None) -> int:
         mobile_output = write_text(args.mobile_output, mobile)
         logger.info("REPORT_CREATED report=%s archive=%s mobile=%s", report_output, archive, mobile_output)
         if args.phase == "f":
-            if not args.dry_run and not DuplicateGuard(args.state_output).should_generate(selected_date):
-                logger.info("NOTIFICATION_SKIPPED market_date=%s reason=duplicate_guard", selected_date)
-                return 0
             try:
                 notification = (
                     DryRunNotificationProvider()
@@ -173,4 +178,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
