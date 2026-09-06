@@ -11,7 +11,10 @@ def test_github_actions_schedule_and_secret_boundaries():
     assert "FEISHU_SECRET is not configured in GitHub Secrets." in content
     assert "workflow_dispatch:" in content
     assert "contents: read" in content
-    assert "actions/cache/restore@v4" in content
-    assert "actions/cache/save@v4" in content
+    assert "actions/checkout@v7" in content
+    assert "actions/setup-python@v7" in content
+    assert "actions/cache/restore@v6" in content
+    assert "actions/cache/save@v6" in content
+    assert "actions/upload-artifact@v7" in content
     assert "concurrency:" in content
     assert "FEISHU_WEBHOOK_URL=" not in content
