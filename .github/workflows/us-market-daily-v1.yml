@@ -41,6 +41,12 @@ jobs:
         working-directory: us_market_v1
         run: python -m pip install -r requirements.txt
 
+      - name: Validate V1 code and tests
+        working-directory: us_market_v1
+        run: |
+          python -m compileall -q src qa
+          python -m pytest
+
       - name: Restore duplicate-send state
         uses: actions/cache/restore@v6
         with:
