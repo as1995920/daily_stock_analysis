@@ -16,5 +16,7 @@ def test_github_actions_schedule_and_secret_boundaries():
     assert "actions/cache/restore@v6" in content
     assert "actions/cache/save@v6" in content
     assert "actions/upload-artifact@v7" in content
+    assert "python -m compileall -q src qa" in content
+    assert "python -m pytest" in content
     assert "concurrency:" in content
     assert "FEISHU_WEBHOOK_URL=" not in content
